@@ -35,9 +35,72 @@ function Tree(data)
   this.levels.push(rootLevel);
 }
 
+Tree.prototype.getSubtree = function(node)
+{
+
+  if(node == null)
+    node = this.rootNode;
+  var data = 
+  {
+    "nodes": [],
+    "edges": []
+  }
+  debugger;
+  var level = this.getNodeLevel(node) ;
+  console.log("Level: " + level);
+
+  //get all nodes from level <= given node
+  debugger;
+  for(var i = 0; i<=level; i++)
+  {
+    for(var j in this.levels[i].nodes)
+      data.nodes.push(this.levels[i].nodes[j])
+    if(i != level)
+      for(var j in this.graph.edges)
+        if(this.levels[i].contains(this.graph.edges[j].source))
+          data.edges.push(this.graph.edges[j]);
+    if(i == level)
+      for(var j in this.graph.edges)
+        if(this.graph.edges[j].source == node.id)
+          data.edges.push(this.graph.edges[j]);
+  }
+
+  console.log("Edges:");
+  console.log(data.edges);
+
+  // get all target nodes from given node
+  for(var i in data.edges)
+    for(var j in this.graph.nodes)
+      if(this.graph.nodes[j].id == data.edges[i].target)
+      {
+        var aIncluded = false;
+        for(var w in data.nodes)
+          if(data.nodes[w].id == this.graph.nodes[j].id)
+            aIncluded = true;
+        if(!aIncluded)
+          data.nodes.push(this.graph.nodes[j]);
+        break;
+      }
+        
+  
+
+  
+  return data;
+}
+
+Tree.prototype.getNodeLevel = function(node)
+{
+  debugger;
+  for(var i in this.levels)
+    if(this.levels[i].contains(node.id))
+      return this.levels[i].id;
+}
+
 Tree.prototype.getGraph = function()
 {
+  debugger;
   console.log(JSON.stringify(this.graph));
+  return JSON.stringify(this.graph);
 }
 
 Tree.prototype.analyse = function()
@@ -214,3 +277,10 @@ dataTree.generateCoordinates();
 dataTree.printLevels();
 console.log("\n\n");
 dataTree.getGraph();
+dataTree.getSubtree({
+      "id": "n1",
+      "label": "Node 1",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    });
