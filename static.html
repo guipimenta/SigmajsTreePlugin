@@ -1,0 +1,39 @@
+<html>
+<head>
+<style type="text/css">
+  #container {
+    max-width: 400px;
+    height: 400px;
+    margin: auto;
+  }
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script src="sigma.min.js"></script>
+<script src="sigma.parsers.json.min.js"></script>
+<script>
+var input = {"nodes":[{"id":"n0","label":"Node 0","x":2,"y":2,"size":3},{"id":"n1","label":"Node 1","x":1,"y":1,"size":3},{"id":"n2","label":"Node 2","x":0,"y":0,"size":3},{"id":"n3","label":"Node 3","x":1.5,"y":1,"size":3},{"id":"n4","label":"Node 4","x":2,"y":1,"size":3},{"id":"n5","label":"Node 5","x":2.5,"y":1,"size":3},{"id":"n6","label":"Node 6","x":1,"y":0,"size":3},{"id":"n7","label":"Node 7","x":1.5,"y":0,"size":3}],"edges":[{"id":"e0","source":"n0","target":"n1"},{"id":"e1","source":"n1","target":"n2"},{"id":"e3","source":"n0","target":"n3"},{"id":"e4","source":"n0","target":"n4"},{"id":"e5","source":"n0","target":"n5"},{"id":"e6","source":"n1","target":"n6"},{"id":"e7","source":"n3","target":"n6"},{"id":"e8","source":"n4","target":"n7"}]};
+
+  function onClick(event) {
+    window.console.log("clicked!");
+} 
+  s = new sigma({ 
+        graph: input,
+        container: 'container',
+        settings: {
+            defaultNodeColor: '#ec5148'
+        }
+  });
+  s.bind('overNode outNode clickNode doubleClickNode rightClickNode', function(e) {
+  console.log(e.type, e.data.node.label, e.data.captor);
+});
+  // s = sigma.parsers.json('data.json', {
+  //   container: 'container',
+  //   settings: {
+  //     defaultNodeColor: '#ec5148'
+  //   }
+  // });
+</script>
+</body>
+</html>
