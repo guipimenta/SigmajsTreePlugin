@@ -9,7 +9,11 @@ Usage is simple:
 
 ```javascript
   var dataTree = new Tree(sample);
+  // This will create level structure 
+  // sorting nodes by level
   dataTree.analyse();
+  // This will read all the nodes and
+  // generate the coordinates
   dataTree.generateCoordinates();
   data = dataTree.getGraph();
   s = new sigma({ 
