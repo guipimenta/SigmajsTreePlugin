@@ -1,3 +1,9 @@
+/*
+The Plugin Core
+Handle the graph as a Tree
+Using level abstraction
+*/
+
 function Level(id)
 {
   this.nodes = [];
@@ -35,6 +41,11 @@ function Tree(data)
   this.levels.push(rootLevel);
 }
 
+Tree.prototype.getNodes = function()
+{
+  return this.graph.nodes;
+}
+
 Tree.prototype.getSubtree = function(node)
 {
 
@@ -45,12 +56,11 @@ Tree.prototype.getSubtree = function(node)
     "nodes": [],
     "edges": []
   }
-  debugger;
   var level = this.getNodeLevel(node) ;
   console.log("Level: " + level);
 
   //get all nodes from level <= given node
-  debugger;
+
   for(var i = 0; i<=level; i++)
   {
     for(var j in this.levels[i].nodes)
@@ -90,7 +100,7 @@ Tree.prototype.getSubtree = function(node)
 
 Tree.prototype.getNodeLevel = function(node)
 {
-  debugger;
+
   for(var i in this.levels)
     if(this.levels[i].contains(node.id))
       return this.levels[i].id;
@@ -98,7 +108,7 @@ Tree.prototype.getNodeLevel = function(node)
 
 Tree.prototype.getGraph = function()
 {
-  debugger;
+
   console.log(JSON.stringify(this.graph));
   return JSON.stringify(this.graph);
 }
@@ -115,6 +125,31 @@ Tree.prototype.verifyNode = function(node)
       return true;
   return false;
 }
+
+Tree.prototype.addNode = function(id)
+{
+  var id = "n" + (this.graph.nodes.length);
+  var nodeLabel = "Node " + this.graph.nodes.length;
+  this.graph.nodes.push({
+    id: id,
+    "label": "Node " + id,
+    "x": 0,
+    "y": 0,
+    "size": 1
+  });
+}
+
+Tree.prototype.addEdge =  function (source, target)
+{
+  var id = "e" + (this.graph.edges.length + 1);
+  var edge = {
+    "id": id, 
+    "source": source, 
+    "target": target};
+
+  this.graph.edges.push(edge);
+}
+
 
 Tree.prototype.expand = function(parentLevel)
 {
@@ -135,6 +170,8 @@ Tree.prototype.expand = function(parentLevel)
   }
 
 }
+
+
 
 Tree.prototype.printLevels = function()
 {
@@ -271,16 +308,17 @@ var sample = {
   ]
 };
 
-var dataTree = new Tree(sample);
-dataTree.analyse();
-dataTree.generateCoordinates();
-dataTree.printLevels();
-console.log("\n\n");
-dataTree.getGraph();
-dataTree.getSubtree({
-      "id": "n1",
-      "label": "Node 1",
-      "x": 0,
-      "y": 0,
-      "size": 3
-    });
+//For testing only
+// var dataTree = new Tree(sample);
+// dataTree.analyse();
+// dataTree.generateCoordinates();
+// dataTree.printLevels();
+// console.log("\n\n");
+// dataTree.getGraph();
+// dataTree.getSubtree({
+//       "id": "n1",
+//       "label": "Node 1",
+//       "x": 0,
+//       "y": 0,
+//       "size": 3
+//     });
