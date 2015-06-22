@@ -1,140 +1,352 @@
-function Node(id, label, x, y, size)
+function Level(id)
 {
-	this.id = id;
-	this.label = label;
-	this.x = x;
-	this.y = y;
-	this.size = size;
+  this.nodes = [];
+  this.id = id;
 }
 
-function Edge(id, source, target)
+Level.prototype.contains = function(id)
 {
-	this.id = id;
-	this.source = source;
-	this.target = target;
+
+  for(var i in this.nodes)
+    if(this.nodes[i].id == id)
+      return true;
+  return false;
 }
 
-function level(levelId, nodes, levelY, levelX)
+Level.prototype.add = function(node)
 {
-	this.id = levelId;
-	this.nodes = nodes;
-	this.y = levelY;
-	this.x = levelX;
+  this.nodes.push(node);
 }
 
-function sigmaConverter(graph)
+Level.prototype.length = function()
 {
-	
-	// Setting up converter
-	this.nodes = graph.nodes;
-	this.edges = graph.edges;
-	this.graph = graph;
-
-	this.nNodes = graph.nodes.length;
-
-	this.rootNode = graph.nodes[0];
-	this.rootLevel = new level(0, [this.rootNode], this.rootNode.y, this.rootNode.x);
-	this.levels = [this.rootLevel];
+  return this.nodes.length;
 }
 
-sigmaConverter.prototype.addEdge = function (source, target)
+function Tree(data)
 {
-	var id = "e" + (this.graph.edges.length + 1);
-	var edge = new Edge(id, source, target);
+  this.graph = data;
+  this.rootNode = data.nodes[0];
+  this.levels = [];
 
-	this.graph.edges.push(edge);
+  //Root level
+  var rootLevel = new Level(0);
+  rootLevel.nodes.push(this.rootNode);
+  this.levels.push(rootLevel);
 }
 
-sigmaConverter.prototype.addNode = function()
+Tree.prototype.getNodes = function()
 {
-	var id = "n" + (this.graph.nodes.length);
-	
-	this.graph.nodes.push(
-	{
-      "id": id,
-      "label": "Node " + id,
+  return this.graph.nodes;
+}
+
+Tree.prototype.getSubtree = function(node)
+{
+
+  if(node == null)
+    node = this.rootNode;
+  var data = 
+  {
+    "nodes": [],
+    "edges": []
+  }
+  var level = this.getNodeLevel(node) ;
+  console.log("Level: " + level);
+
+  //get all nodes from level <= given node
+
+  for(var i = 0; i<=level; i++)
+  {
+    for(var j in this.levels[i].nodes)
+      data.nodes.push(this.levels[i].nodes[j])
+    if(i != level)
+      for(var j in this.graph.edges)
+        if(this.levels[i].contains(this.graph.edges[j].source))
+          data.edges.push(this.graph.edges[j]);
+    if(i == level)
+      for(var j in this.graph.edges)
+        if(this.graph.edges[j].source == node.id)
+          data.edges.push(this.graph.edges[j]);
+  }
+
+  console.log("Edges:");
+  console.log(data.edges);
+
+  // get all target nodes from given node
+  for(var i in data.edges)
+    for(var j in this.graph.nodes)
+      if(this.graph.nodes[j].id == data.edges[i].target)
+      {
+        var aIncluded = false;
+        for(var w in data.nodes)
+          if(data.nodes[w].id == this.graph.nodes[j].id)
+            aIncluded = true;
+        if(!aIncluded)
+          data.nodes.push(this.graph.nodes[j]);
+        break;
+      }
+        
+  
+
+  
+  return data;
+}
+
+// Updates the subtree
+// Adding children of given node
+
+Tree.prototype.bindedUpdate = function(subtree, subTreeNode)
+{
+
+  for(var i in this.graph.edges)
+    if(this.graph.edges[i].source == subTreeNode.id)
+    {
+      var node = this.getNodeById(this.graph.edges[i].target);
+      var flag = false;
+      for(var j in subtree.nodes)
+        if(subtree.nodes[j].id == node.id)
+          flag = true;
+      if(!flag) 
+        subtree.nodes.push(this.getNodeById(this.graph.edges[i].target));
+
+      flag = false;
+      for(var j in subtree.edges)
+        if(subtree.edges[j].id == this.graph.edges[i].id)
+          flag = true
+      if(!flag)
+        subtree.edges.push(this.graph.edges[i]);
+    }
+  return subtree;
+}
+
+Tree.prototype.getNodeById = function(id)
+{
+  for(var i in this.graph.nodes)
+    if(this.graph.nodes[i].id == id)
+      return this.graph.nodes[i];
+}
+
+Tree.prototype.getNodeLevel = function(node)
+{
+
+  for(var i in this.levels)
+    if(this.levels[i].contains(node.id))
+      return this.levels[i].id;
+}
+
+Tree.prototype.getGraph = function()
+{
+
+  console.log(JSON.stringify(this.graph));
+  return JSON.stringify(this.graph);
+}
+
+Tree.prototype.analyse = function()
+{
+  this.expand(this.levels[0]);
+}
+
+Tree.prototype.verifyNode = function(node)
+{
+  for(var j in this.levels)
+    if(this.levels[j].contains(node))
+      return true;
+  return false;
+}
+
+Tree.prototype.addNode = function(id)
+{
+  var id = "n" + (this.graph.nodes.length);
+  var nodeLabel = "Node " + this.graph.nodes.length;
+  this.graph.nodes.push({
+    id: id,
+    "label": "Node " + id,
+    "x": 0,
+    "y": 0,
+    "size": 3
+  });
+  return id;
+}
+
+Tree.prototype.addEdge =  function (source, target)
+{
+  var id = "e" + (this.graph.edges.length + 1);
+  var edge = {
+    "id": id, 
+    "source": source, 
+    "target": target};
+
+  this.graph.edges.push(edge);
+}
+
+
+Tree.prototype.expand = function(parentLevel)
+{
+
+  var nLevel = new Level(parentLevel.id + 1);
+
+  for(var i in this.graph.edges)
+    if(parentLevel.contains(this.graph.edges[i].source))
+      for(var j in this.graph.nodes)
+        if(this.graph.nodes[j].id == this.graph.edges[i].target)
+          if(!this.verifyNode(this.graph.nodes[j].id))
+            nLevel.add(this.graph.nodes[j]);
+
+  if(nLevel.length() > 0)
+  {
+    this.levels.push(nLevel);
+    this.expand(nLevel);
+  }
+
+}
+
+
+
+Tree.prototype.printLevels = function()
+{
+    for(var i in this.levels)
+    {
+      console.log("Level " + this.levels[i].id);
+      console.log(this.levels[i]);
+    }
+}
+
+Tree.prototype.generateCoordinates = function()
+{
+  var xValue = 0;
+  var yValue = 0;
+  for(var i = (this.levels.length-1); i>=0; i--)
+  {
+    var level = this.levels[i];
+    for(var j in level.nodes)
+    {
+      level.nodes[j].x = xValue;
+      level.nodes[j].y = yValue;
+      xValue=xValue + 0.5;
+    }
+
+    xValue = level.nodes[0].x + 1;
+    yValue = yValue + 1;
+
+
+  }
+}
+
+var sample = {
+  "nodes": [
+    {
+      "id": "n0",
+      "label": "Node 0",
       "x": 0,
       "y": 0,
-      "size": 1
-    });
-}
-
-sigmaConverter.prototype.convert = function()
-{
-	
-	this.generateCoordinates([this.rootNode], this.rootLevel);
-	console.log(this.graph);
-}
-
-sigmaConverter.prototype.generateCoordinates = function(parentNodes, parentLevel)
-{
-	//var child = this.getChild(parentNode.id);
-	
-
-	var levelNodes=[]
-	for(var node in parentNodes)
-	{
-	
-		var childs = this.getChild(parentNodes[node].id);
-		for (var child in childs)
-			levelNodes.push(childs[child]);
-	}
-
-	var brotherNode = null;
-	
-	var cLevel = new level(parentLevel.id + 1, new Array, parentLevel.y, parentLevel.x + 0.1);
-
-	for(var node in levelNodes)
-	{
-		levelNodes[node].x = cLevel.x;
-		if(brotherNode)
-			levelNodes[node].y = brotherNode.y + 0.05;
-		else
-			levelNodes[node].y = cLevel.y;
-			
-
-		brotherNode = levelNodes[node];
-		cLevel.nodes.push(levelNodes[node]);
-	}
-
-	this.updateGraph(levelNodes);
-
-	if(levelNodes.length > 0)
-		this.generateCoordinates(levelNodes, cLevel);
-
-	
-}
-
-sigmaConverter.prototype.updateGraph = function(levelNodes)
-{
-	for(var node in levelNodes.nodes)
-		for(var node in this.graph.nodes)
-			if(this.graph.nodes[node].id == levelNodes[node].id)
-			{
-				this.graph.nodes[node].x = levelNodes[node].x;
-				this.graph.nodes[node].y = levelNodes[node].y;
-			}
-}
-
-// Serches for each
-sigmaConverter.prototype.getChild = function(nodeId)
-{
-
-	var child = [];
-	for(var edge in this.edges)
-		if(this.edges[edge].source == nodeId)
-			for(var node in this.nodes)
-				if(this.nodes[node].id == this.edges[edge].target)
-					child.push(this.nodes[node]);
-	return child;
-}
+      "size": 3
+    },
+    {
+      "id": "n1",
+      "label": "Node 1",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    },
+    {
+      "id": "n2",
+      "label": "Node 2",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    },
+    {
+      "id": "n3",
+      "label": "Node 3",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    }, 
+    {
+      "id": "n4",
+      "label": "Node 4",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    },
+    {
+      "id": "n5",
+      "label": "Node 5",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    },
+    {
+      "id": "n6",
+      "label": "Node 6",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    },
+    {
+      "id": "n7",
+      "label": "Node 7",
+      "x": 0,
+      "y": 0,
+      "size": 3
+    }
 
 
-sigmaConverter.prototype.getGraph = function()
-{
-	return this.graph;
-}
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "source": "n0",
+      "target": "n1"
+    },
+    {
+      "id": "e1",
+      "source": "n1",
+      "target": "n2"
+    },
+    {
+      "id": "e3",
+      "source": "n0",
+      "target": "n3"
+    },
+    {
+      "id": "e4",
+      "source": "n0",
+      "target": "n4"
+    },
+    {
+      "id": "e5",
+      "source": "n0",
+      "target": "n5"
+    },
+    {
+      "id": "e6",
+      "source": "n1",
+      "target": "n6"
+    },
+    {
+      "id": "e7",
+      "source": "n3",
+      "target": "n6"
+    },
+    {
+      "id": "e8",
+      "source": "n4",
+      "target": "n7"
+    }
+  ]
+};
 
-// var converter = new sigmaConverter(sample);
-// converter.convert();
-// console.log(converter.getGraph());
+// var dataTree = new Tree(sample);
+// dataTree.analyse();
+// dataTree.generateCoordinates();
+// dataTree.printLevels();
+// console.log("\n\n");
+// dataTree.getGraph();
+// dataTree.getSubtree({
+//       "id": "n1",
+//       "label": "Node 1",
+//       "x": 0,
+//       "y": 0,
+//       "size": 3
+//     });
